@@ -17,7 +17,7 @@ def set_blynk_value(token, pin, value):
     #url = f"{BLYNK_BASE_URL}/update?token={token}&{pin}={value}"
     #url=f"https://192.168.1.103:9443/n4uICWW8guhAulM_Rwe2bG8hjcP3TzMB/update/V1?value=1"
     url=f"https://192.168.1.103:9443/update?token={token}&{pin}={value}"
-    #on thunkable:https://blynkproxy.onrender.com/blynk/n4uICWW8guhAulM_Rwe2bG8hjcP3TzMB/set/V1/1
+    #on thunkable:https://blynkproxy.onrender.com/n4uICWW8guhAulM_Rwe2bG8hjcP3TzMB/set/V1/1
     response = requests.get(url)
     return jsonify(response.json())
 
