@@ -1,25 +1,38 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
-BLYNK_BASE_URL = "https://blynk.cloud/external/api"
-
-@app.route('/blynk/<token>/pin/<pin>', methods=['GET'])
-def get_blynk_value(token, pin):
-    #url = f"{BLYNK_BASE_URL}/get?token={token}&pin={pin}"
-    url=f"https://192.168.1.103:9443/get?token={token}&pin={pin}"
-    response = requests.get(url)
-    return jsonify(response.json())
+BLYNK_SERVER = "https://192.168.1.103:9443"
 
 @app.route('/blynk/<token>/set/<pin>/<value>', methods=['GET'])
 def set_blynk_value(token, pin, value):
-    #url = f"{BLYNK_BASE_URL}/update?token={token}&{pin}={value}"
-    #url=f"https://192.168.1.103:9443/n4uICWW8guhAulM_Rwe2bG8hjcP3TzMB/update/V1?value=1"
-    url=f"https://192.168.1.103:9443/update?token={token}&{pin}={value}"
-    #on thunkable:https://blynkproxy.onrender.com/n4uICWW8guhAulM_Rwe2bG8hjcP3TzMB/set/V1/1
-    response = requests.get(url)
-    return jsonify(response.json())
+    """ Set a virtual pin value in Blynk. """
+    success, response_text = set_blynk(BLYNK_SERVER, token, pin, value)
+
+    if success:
+        return jsonify({"status": "success", "pin": pin, "value": value, "response": response_text}), 200
+    else:
+        return jsonify({"status": "error", "message": response_text}), 500
+
+
+def set_blynk(blynk_server, token, pin, value):
+    """ Sends a request to Blynk and handles response. """
+    blynk_url = f"{blynk_server}/{token}/update/{pin}?value={value}"
+
+    try:
+        response = requests.get(blynk_url, verify=False)  # Disable SSL verification
+        response.raise_for_status()
+
+        if response.text.strip() == "":
+            return True, f"Value {value} sent successfully to {pin}."
+        
+        return True, response.text
+
+    except requests.exceptions.RequestException as e:
+        return False, str(e)
 
 if __name__ == '__main__':
-    app.run(host="localhost", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
